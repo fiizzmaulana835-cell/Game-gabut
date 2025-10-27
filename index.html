@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Game Simetris Sentuh</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            overflow: hidden; /* Mencegah scrolling pada perangkat mobile */
+        }
+        canvas {
+            border: 2px solid #333;
+            background-color: #fff;
+            touch-action: none; /* Mencegah default touch actions seperti scrolling/zooming */
+        }
+        h1 {
+            position: absolute;
+            top: 10px;
+            color: #333;
+            font-family: sans-serif;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sentuh Layar untuk Menggerakkan</h1>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Mengatur ukuran canvas agar responsif dan simetris (misalnya persegi)
+        let size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.9);
+        canvas.width = size;
+        canvas.height = size;
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = 25; // Ukuran lingkaran
+
+        let leftCircleX = centerX - 100;
+        let rightCircleX = centerX + 100;
+        const circleY = centerY;
+
+        // --- Fungsi Gambar ---
+        function drawCircle(x, y, color) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawGame() {
+            // Bersihkan canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Garis Simetri
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.closePath();
+
+            // Gambar Lingkaran Kiri
+            drawCircle(leftCircleX, circleY, 'blue');
+
+            // Gambar Lingkaran Kanan
+            drawCircle(rightCircleX, circleY, 'red');
+
+            // Contoh efek visual simetris di tengah
+            ctx.beginPath();
+            ctx.rect(centerX - 5, 0, 10, canvas.height);
+            ctx.fillStyle = 'rgba(255, 165, 0, 0.3)'; // Kuning Transparan
+            ctx.fill();
+            ctx.closePath();
+
+            requestAnimationFrame(drawGame);
+        }
+
+        // --- Event Listener untuk Touch/Sentuhan ---
+
+        function handleMove(clientX) {
+            // Hitung posisi relatif sentuhan terhadap canvas
+            const rect = canvas.getBoundingClientRect();
+            const touchX = clientX - rect.left;
+
+            // Logika Simetri:
+            // Jarak sentuhan dari pusat (center)
+            const distanceFromCenter = touchX - centerX;
+
+            // Batasan pergerakan (agar lingkaran tidak keluar canvas)
+            const maxDistance = centerX - radius;
+            const constrainedDistance = Math.max(-maxDistance, Math.min(maxDistance, distanceFromCenter));
+
+            // Atur posisi lingkaran kiri
+            leftCircleX = centerX + constrainedDistance;
+
+            // Atur posisi lingkaran kanan (Simetri: jarak yang sama dari pusat, tetapi di sisi berlawanan)
+            rightCircleX = centerX - constrainedDistance;
+        }
+
+        // Event Sentuhan: touchstart, touchmove
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Mencegah tindakan default browser (seperti scrolling)
+            if (e.touches.length > 0) {
+                // Gunakan posisi sentuhan pertama
+                handleMove(e.touches[0].clientX);
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                handleMove(e.touches[0].clientX);
+            }
+        });
+
+        // Event Mouse (untuk pengujian di desktop)
+        canvas.addEventListener('mousedown', (e) => {
+            handleMove(e.clientX);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            // Hanya gerakkan jika tombol mouse ditekan (dragging)
+            if (e.buttons === 1) {
+                handleMove(e.clientX);
+            }
+        });
+
+
+        // Mulai Loop Game
+        window.onload = drawGame;
+        window.onresize = () => {
+             // Sesuaikan ukuran canvas saat jendela diubah ukurannya
+            size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.9);
+            canvas.width = size;
+            canvas.height = size;
+            // Perlu mengatur ulang variabel pusat dan lingkaran jika ukuran berubah
+            centerX = canvas.width / 2;
+            centerY = canvas.height / 2;
+            circleY = centerY;
+        };
+
+    </script>
+</body>
+</html>
